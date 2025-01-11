@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from config import BOT_TOKEN
+from config import bot_token
 import asyncio
 from telegram.ext import Application
 from telegram.ext import Application
