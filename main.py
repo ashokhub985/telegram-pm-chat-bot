@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
-
+import asyncio
+from telegram.ext import Application
 from telegram.ext import Application
 import time
 import json
@@ -75,12 +76,22 @@ def init_user(user):
         preference_list[str(user.id)]['name'] = user.full_name
         threading.Thread(target=save_preference).start()
 
-# Initialize the application with token from CONFIG
-application = Application.builder().token("your_bot_token_here").build()
+async def main():
+    application = Application.builder().token("your_bot_token_here").build()
+    bot = application.bot
 
-# Get bot details
-me = application.bot.get_me()
-CONFIG['ID'] = me.id
+    # Correct way to call 'get_me' as it is an async function
+    me = await bot.get_me()  # Now it will await and resolve the coroutine properly
+
+    # After awaiting, you can access 'me.id' without error
+    CONFIG['ID'] = me.id
+    print(CONFIG['ID'])
+
+    # Continue with other bot logic here
+
+if __name__ == "__main__":
+    asyncio.run(main())  # Runs the async function properly
+
 CONFIG['Username'] = '@' + me.username
 
 print(f'Starting... (ID: {CONFIG["ID"]}, Username: {CONFIG["Username"]})')
