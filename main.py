@@ -1,5 +1,6 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
+from config import BOT_Token
 import asyncio
 from telegram.ext import Application
 from telegram.ext import Application
@@ -77,7 +78,7 @@ def init_user(user):
         threading.Thread(target=save_preference).start()
 
 async def main():
-    application = Application.builder().token("your_bot_token_here").build()
+    application = Application.builder().token("bot_token").build()
     bot = application.bot
 
     # Correct way to call 'get_me' as it is an async function
