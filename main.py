@@ -76,7 +76,7 @@ def init_user(user):
         threading.Thread(target=save_preference).start()
 
 # Initialize the application with token from CONFIG
-application = Application.builder().token(CONFIG['Token']).build()
+application = Application.builder().token("your_bot_token_here").build()
 
 # Get bot details
 me = application.bot.get_me()
