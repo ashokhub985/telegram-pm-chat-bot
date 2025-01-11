@@ -1,5 +1,32 @@
 {
     "Admin": 0,
     "Token": "",
-    "Lang": "en"
+    "Lang": "en",
+    "BotSettings": {
+        "Notification": {
+            "enabled": true,
+            "message": "Your message has been successfully sent."
+        },
+        "CommandSettings": {
+            "setAdminCommand": "/setadmin",
+            "toggleNotificationCommand": "/togglenotification"
+        }
+    },
+    "Security": {
+        "allowedIPs": ["127.0.0.1", "192.168.0.1"],
+        "maxMessageLength": 1000,
+        "rateLimit": {
+            "enabled": true,
+            "requestsPerMinute": 30
+        }
+    },
+    "Logging": {
+        "enabled": true,
+        "logFile": "logs/bot.log",
+        "logLevel": "INFO"
+    },
+    "UserSettings": {
+        "blockedUsers": [],
+        "bannedUsers": []
+    }
 }
