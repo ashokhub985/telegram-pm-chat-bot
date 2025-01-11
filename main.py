@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from telegram.ext import Application
 import time
 import json
 import telegram.ext
@@ -74,8 +75,13 @@ def init_user(user):
         preference_list[str(user.id)]['name'] = user.full_name
         threading.Thread(target=save_preference).start()
 
-# Setup the updater and dispatcher
-updater = telegram.ext.Updater(token=CONFIG['Token'])
+from telegram.ext import Application
+
+# Initialize the application with token from CONFIG
+application = Application.builder().token(CONFIG['Token']).build()
+
+# Replace the use of 'updater' with 'application'
+application.run_polling()
 dispatcher = updater.dispatcher
 me = updater.bot.get_me()
 CONFIG['ID'] = me.id
