@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*- 
 
 from telegram.ext import Application
 import time
@@ -75,28 +75,25 @@ def init_user(user):
         preference_list[str(user.id)]['name'] = user.full_name
         threading.Thread(target=save_preference).start()
 
-from telegram.ext import Application
-
 # Initialize the application with token from CONFIG
 application = Application.builder().token(CONFIG['Token']).build()
 
-# Replace the use of 'updater' with 'application'
-application.run_polling()
-dispatcher = updater.dispatcher
-me = updater.bot.get_me()
+# Get bot details
+me = application.bot.get_me()
 CONFIG['ID'] = me.id
 CONFIG['Username'] = '@' + me.username
 
 print(f'Starting... (ID: {CONFIG["ID"]}, Username: {CONFIG["Username"]})')
 
 # Process incoming messages
-def process_msg(bot, update):
+async def process_msg(update, context):
     global message_list
+    bot = context.bot
     init_user(update.message.from_user)
 
     if CONFIG['Admin'] == 0:
-        bot.send_message(chat_id=update.message.from_user.id,
-                         text=LANG['please_setup_first'])
+        await bot.send_message(chat_id=update.message.from_user.id,
+                               text=LANG['please_setup_first'])
         return
 
     if update.message.from_user.id == CONFIG['Admin']:
@@ -106,49 +103,50 @@ def process_msg(bot, update):
                 sender_id = message_list[str(update.message.reply_to_message.message_id)]['sender_id']
                 try:
                     if msg.audio:
-                        bot.send_audio(chat_id=sender_id, audio=msg.audio, caption=msg.caption)
+                        await bot.send_audio(chat_id=sender_id, audio=msg.audio, caption=msg.caption)
                     elif msg.document:
-                        bot.send_document(chat_id=sender_id, document=msg.document, caption=msg.caption)
+                        await bot.send_document(chat_id=sender_id, document=msg.document, caption=msg.caption)
                     elif msg.voice:
-                        bot.send_voice(chat_id=sender_id, voice=msg.voice, caption=msg.caption)
+                        await bot.send_voice(chat_id=sender_id, voice=msg.voice, caption=msg.caption)
                     elif msg.video:
-                        bot.send_video(chat_id=sender_id, video=msg.video, caption=msg.caption)
+                        await bot.send_video(chat_id=sender_id, video=msg.video, caption=msg.caption)
                     elif msg.sticker:
-                        bot.send_sticker(chat_id=sender_id, sticker=update.message.sticker)
+                        await bot.send_sticker(chat_id=sender_id, sticker=update.message.sticker)
                     elif msg.photo:
-                        bot.send_photo(chat_id=sender_id, photo=msg.photo[0], caption=msg.caption)
+                        await bot.send_photo(chat_id=sender_id, photo=msg.photo[0], caption=msg.caption)
                     elif msg.text_markdown:
-                        bot.send_message(chat_id=sender_id, text=msg.text_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
+                        await bot.send_message(chat_id=sender_id, text=msg.text_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
                     else:
-                        bot.send_message(chat_id=CONFIG['Admin'], text=LANG['reply_type_not_supported'])
+                        await bot.send_message(chat_id=CONFIG['Admin'], text=LANG['reply_type_not_supported'])
                         return
                 except Exception as e:
                     if e.message == 'Forbidden: bot was blocked by the user':
-                        bot.send_message(chat_id=CONFIG['Admin'], text=LANG['blocked_alert'])
+                        await bot.send_message(chat_id=CONFIG['Admin'], text=LANG['blocked_alert'])
                     else:
-                        bot.send_message(chat_id=CONFIG['Admin'], text=LANG['reply_message_failed'])
+                        await bot.send_message(chat_id=CONFIG['Admin'], text=LANG['reply_message_failed'])
                     return
 
                 if preference_list[str(update.message.from_user.id)]['notification']:
-                    bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_message_sent'] % (preference_list[str(sender_id)]['name'], str(sender_id)), parse_mode=telegram.ParseMode.MARKDOWN)
+                    await bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_message_sent'] % (preference_list[str(sender_id)]['name'], str(sender_id)), parse_mode=telegram.ParseMode.MARKDOWN)
             else:
-                bot.send_message(chat_id=CONFIG['Admin'], text=LANG['reply_to_message_no_data'])
+                await bot.send_message(chat_id=CONFIG['Admin'], text=LANG['reply_to_message_no_data'])
         else:
-            bot.send_message(chat_id=CONFIG['Admin'], text=LANG['reply_to_no_message'])
+            await bot.send_message(chat_id=CONFIG['Admin'], text=LANG['reply_to_no_message'])
     else:
         if preference_list[str(update.message.from_user.id)]['blocked']:
-            bot.send_message(chat_id=update.message.from_user.id, text=LANG['be_blocked_alert'])
+            await bot.send_message(chat_id=update.message.from_user.id, text=LANG['be_blocked_alert'])
             return
-        fwd_msg = bot.forward_message(chat_id=CONFIG['Admin'], from_chat_id=update.message.chat_id, message_id=update.message.message_id)
+        fwd_msg = await bot.forward_message(chat_id=CONFIG['Admin'], from_chat_id=update.message.chat_id, message_id=update.message.message_id)
         if fwd_msg.sticker:
-            bot.send_message(chat_id=CONFIG['Admin'], text=LANG['info_data'] % (update.message.from_user.full_name, str(update.message.from_user.id)), parse_mode=telegram.ParseMode.MARKDOWN, reply_to_message_id=fwd_msg.message_id)
+            await bot.send_message(chat_id=CONFIG['Admin'], text=LANG['info_data'] % (update.message.from_user.full_name, str(update.message.from_user.id)), parse_mode=telegram.ParseMode.MARKDOWN, reply_to_message_id=fwd_msg.message_id)
         if preference_list[str(update.message.from_user.id)]['notification']:
-            bot.send_message(chat_id=update.message.from_user.id, text=LANG['message_received_notification'])
+            await bot.send_message(chat_id=update.message.from_user.id, text=LANG['message_received_notification'])
         message_list[str(fwd_msg.message_id)] = {'sender_id': update.message.from_user.id}
         threading.Thread(target=save_data).start()
 
 # Process commands
-def process_command(bot, update):
+async def process_command(update, context):
+    bot = context.bot
     init_user(update.message.from_user)
     id = update.message.from_user.id
     global CONFIG
@@ -156,82 +154,71 @@ def process_command(bot, update):
     command = update.message.text[1:].replace(CONFIG['Username'], '').lower().split()
 
     if command[0] == 'start':
-        bot.send_message(chat_id=update.message.chat_id, text=LANG['start'])
+        await bot.send_message(chat_id=update.message.chat_id, text=LANG['start'])
         return
     elif command[0] == 'version':
-        bot.send_message(chat_id=update.message.chat_id, text=f'Telegram Private Message Chat Bot\n{Version_Code}\nhttps://github.com/Netrvin/telegram-pm-chat-bot')
+        await bot.send_message(chat_id=update.message.chat_id, text=f'Telegram Private Message Chat Bot\n{Version_Code}\nhttps://github.com/Netrvin/telegram-pm-chat-bot')
         return
     elif command[0] == 'setadmin':
         if CONFIG['Admin'] == 0:
             CONFIG['Admin'] = int(update.message.from_user.id)
             save_config()
-            bot.send_message(chat_id=update.message.chat_id, text=LANG['set_admin_successful'])
+            await bot.send_message(chat_id=update.message.chat_id, text=LANG['set_admin_successful'])
         else:
-            bot.send_message(chat_id=update.message.chat_id, text=LANG['set_admin_failed'])
+            await bot.send_message(chat_id=update.message.chat_id, text=LANG['set_admin_failed'])
         return
     elif command[0] == 'togglenotification':
         preference_list[str(id)]['notification'] = not preference_list[str(id)]['notification']
         threading.Thread(target=save_preference).start()
         if preference_list[str(id)]['notification']:
-            bot.send_message(chat_id=update.message.chat_id, text=LANG['togglenotification_on'])
+            await bot.send_message(chat_id=update.message.chat_id, text=LANG['togglenotification_on'])
         else:
-            bot.send_message(chat_id=update.message.chat_id, text=LANG['togglenotification_off'])
+            await bot.send_message(chat_id=update.message.chat_id, text=LANG['togglenotification_off'])
     elif command[0] == 'info':
         if update.message.from_user.id == CONFIG['Admin'] and update.message.chat_id == CONFIG['Admin']:
             if update.message.reply_to_message:
                 if str(update.message.reply_to_message.message_id) in message_list:
                     sender_id = message_list[str(update.message.reply_to_message.message_id)]['sender_id']
-                    bot.send_message(chat_id=update.message.chat_id, text=LANG['info_data'] % (preference_list[str(sender_id)]['name'], str(sender_id)), parse_mode=telegram.ParseMode.MARKDOWN, reply_to_message_id=update.message.reply_to_message.message_id)
+                    await bot.send_message(chat_id=update.message.chat_id, text=LANG['info_data'] % (preference_list[str(sender_id)]['name'], str(sender_id)), parse_mode=telegram.ParseMode.MARKDOWN, reply_to_message_id=update.message.reply_to_message.message_id)
                 else:
-                    bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_message_no_data'])
+                    await bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_message_no_data'])
             else:
-                bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_no_message'])
+                await bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_no_message'])
         else:
-            bot.send_message(chat_id=update.message.chat_id, text=LANG['not_an_admin'])
+            await bot.send_message(chat_id=update.message.chat_id, text=LANG['not_an_admin'])
     elif command[0] == 'ping':
-        bot.send_message(chat_id=update.message.chat_id, text='Pong!')
+        await bot.send_message(chat_id=update.message.chat_id, text='Pong!')
     elif command[0] == 'ban':
         if update.message.from_user.id == CONFIG['Admin'] and update.message.chat_id == CONFIG['Admin']:
             if update.message.reply_to_message:
                 if str(update.message.reply_to_message.message_id) in message_list:
                     sender_id = message_list[str(update.message.reply_to_message.message_id)]['sender_id']
                     preference_list[str(sender_id)]['blocked'] = True
-                    bot.send_message(chat_id=update.message.chat_id, text=LANG['ban_user'] % (preference_list[str(sender_id)]['name'], str(sender_id)), parse_mode=telegram.ParseMode.MARKDOWN)
-                    bot.send_message(chat_id=sender_id, text=LANG['be_blocked_alert'])
+                    await bot.send_message(chat_id=update.message.chat_id, text=LANG['ban_user'] % (preference_list[str(sender_id)]['name'], str(sender_id)), parse_mode=telegram.ParseMode.MARKDOWN)
+                    await bot.send_message(chat_id=sender_id, text=LANG['be_blocked_alert'])
                 else:
-                    bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_message_no_data'])
+                    await bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_message_no_data'])
             else:
-                bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_no_message'])
+                await bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_no_message'])
         else:
-            bot.send_message(chat_id=update.message.chat_id, text=LANG['not_an_admin'])
+            await bot.send_message(chat_id=update.message.chat_id, text=LANG['not_an_admin'])
     elif command[0] == 'unban':
         if update.message.from_user.id == CONFIG['Admin'] and update.message.chat_id == CONFIG['Admin']:
             if update.message.reply_to_message:
                 if str(update.message.reply_to_message.message_id) in message_list:
                     sender_id = message_list[str(update.message.reply_to_message.message_id)]['sender_id']
                     preference_list[str(sender_id)]['blocked'] = False
-                    bot.send_message(chat_id=update.message.chat_id, text=LANG['unban_user'] % (preference_list[str(sender_id)]['name'], str(sender_id)), parse_mode=telegram.ParseMode.MARKDOWN)
-                    bot.send_message(chat_id=sender_id, text=LANG['unblocked_alert'])
+                    await bot.send_message(chat_id=update.message.chat_id, text=LANG['unban_user'] % (preference_list[str(sender_id)]['name'], str(sender_id)), parse_mode=telegram.ParseMode.MARKDOWN)
                 else:
-                    bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_message_no_data'])
+                    await bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_message_no_data'])
             else:
-                bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_no_message'])
+                await bot.send_message(chat_id=update.message.chat_id, text=LANG['reply_to_no_message'])
         else:
-            bot.send_message(chat_id=update.message.chat_id, text=LANG['not_an_admin'])
-    else:
-        bot.send_message(chat_id=update.message.chat_id, text=LANG['command_not_found'])
+            await bot.send_message(chat_id=update.message.chat_id, text=LANG['not_an_admin'])
 
-# Add handlers
-dispatcher.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.text & ~telegram.ext.Filters.command, process_msg))
-dispatcher.add_handler(telegram.ext.CommandHandler('start', process_command))
-dispatcher.add_handler(telegram.ext.CommandHandler('version', process_command))
-dispatcher.add_handler(telegram.ext.CommandHandler('setadmin', process_command))
-dispatcher.add_handler(telegram.ext.CommandHandler('togglenotification', process_command))
-dispatcher.add_handler(telegram.ext.CommandHandler('info', process_command))
-dispatcher.add_handler(telegram.ext.CommandHandler('ping', process_command))
-dispatcher.add_handler(telegram.ext.CommandHandler('ban', process_command))
-dispatcher.add_handler(telegram.ext.CommandHandler('unban', process_command))
+# Command handlers
+application.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.text & ~telegram.ext.Filters.command, process_msg))
+application.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.command, process_command))
 
 # Start the bot
-updater.start_polling()
-updater.idle()
+application.run_polling()
