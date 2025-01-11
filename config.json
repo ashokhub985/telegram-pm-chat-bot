@@ -1,6 +1,6 @@
 {
     "Admin": 0,
-    "Token": "",
+    "Token": "your_bot_token_here",
     "Lang": "en",
     "BotSettings": {
         "Notification": {
