@@ -1,27 +1,11 @@
-from dotenv import load_dotenv
-import os
+# info.py
 
-# .env file ko load karein
-load_dotenv()
+# Config Dictionary for all variables
+config = {
+    "BOT_TOKEN": "your_bot_token_here",  # Your bot's API token from BotFather
+    "ADMIN_ID": "your_telegram_id_here",  # Your Telegram ID for forwarding messages
+}
 
-# Variables ko access karein
-admin_id = os.getenv("ADMIN_ID")
-bot_token = os.getenv("BOT_TOKEN")
-lang = os.getenv("LANG")
-notification_enabled = os.getenv("NOTIFICATION_ENABLED") == "true"
-notification_message = os.getenv("NOTIFICATION_MESSAGE")
-command_setadmin = os.getenv("COMMAND_SETADMIN")
-command_togglenotification = os.getenv("COMMAND_TOGGLENOTIFICATION")
-allowed_ips = os.getenv("ALLOWED_IPS").split(",")
-max_message_length = int(os.getenv("MAX_MESSAGE_LENGTH"))
-rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED") == "true"
-requests_per_minute = int(os.getenv("REQUESTS_PER_MINUTE"))
-logging_enabled = os.getenv("LOGGING_ENABLED") == "true"
-log_file = os.getenv("LOG_FILE")
-log_level = os.getenv("LOG_LEVEL")
-
-# Output to check values
-print(f"Admin ID: {admin_id}")
-print(f"Bot Token: {bot_token}")
-print(f"Notification Enabled: {notification_enabled}")
-print(f"Allowed IPs: {allowed_ips}")
+# Function to add new settings dynamically
+def add_setting(key, value):
+    config[key] = value
